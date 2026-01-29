@@ -7,12 +7,25 @@ import type {
 
 const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
+// Debug: Check if API key is loaded
+console.log('Claude API Key loaded:', ANTHROPIC_API_KEY ? 'Yes (starts with ' + ANTHROPIC_API_KEY.substring(0, 10) + '...)' : 'NO - Missing!');
+
 /**
  * Generate a video script using Claude AI
  */
 export async function generateVideoScript(
   request: GenerateScriptRequest
 ): Promise<VideoScript> {
+  // Check for API key
+  if (!ANTHROPIC_API_KEY) {
+    console.error('VITE_ANTHROPIC_API_KEY is not set. Make sure .env file exists and you restarted the dev server.');
+    return generateFallbackScript(request);
+  }
+
+  console.log('Generating video script with Claude API...');
+  console.log('Data sources:', request.dataSources.length);
+  console.log('Prompt:', request.prompt.substring(0, 50) + '...');
+
   // Combine all data sources into context
   const dataContext = request.dataSources
     .map((source) => `[${source.type.toUpperCase()}: ${source.name}]\n${source.content}`)
@@ -62,6 +75,8 @@ ${request.style === 'corporate' ? '(Traditional business tone, formal)' : ''}
 Remember: Extract REAL data points, names, numbers, and insights from the provided content. Do not use generic placeholder text.`;
 
   try {
+    console.log('Making API request to /api/anthropic/v1/messages...');
+
     const response = await fetch('/api/anthropic/v1/messages', {
       method: 'POST',
       headers: {
@@ -81,14 +96,18 @@ Remember: Extract REAL data points, names, numbers, and insights from the provid
       }),
     });
 
+    console.log('API Response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Claude API error:', errorText);
-      throw new Error(`API request failed: ${response.status}`);
+      console.error('Claude API error:', response.status, errorText);
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('API Response received, parsing...');
     const content = data.content[0].text;
+    console.log('Claude response (first 200 chars):', content.substring(0, 200));
 
     // Parse the JSON response
     let parsedScript;
