@@ -7,8 +7,8 @@ import type {
 
 const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
-// Debug: Check if API key is loaded
-console.log('Claude API Key loaded:', ANTHROPIC_API_KEY ? 'Yes (starts with ' + ANTHROPIC_API_KEY.substring(0, 10) + '...)' : 'NO - Missing!');
+// Debug: Check if API key is loaded (using alert so it's unmissable)
+alert('API Key Status: ' + (ANTHROPIC_API_KEY ? 'LOADED - ' + ANTHROPIC_API_KEY.substring(0, 15) + '...' : 'MISSING!'));
 
 /**
  * Generate a video script using Claude AI
